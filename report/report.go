@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"os"
 	"time"
+
+	"golang.org/x/text/encoding/japanese"
+	"golang.org/x/text/transform"
 )
 
 // Change represents a single replacement action in an Excel file.
@@ -31,19 +34,21 @@ func GenerateCSV(changes []Change, outputDir string) (string, error) {
 	}
 	defer file.Close()
 
-	writer := csv.NewWriter(file)
-	defer writer.Flush()
+	// Wrap file with Shift-JIS encoder
+	writer := transform.NewWriter(file, japanese.ShiftJIS.NewEncoder())
+	csvWriter := csv.NewWriter(writer)
+	defer csvWriter.Flush()
 
 	// Header
 	header := []string{"File Path", "Sheet", "Cell", "Old Value", "New Value"}
-	if err := writer.Write(header); err != nil {
+	if err := csvWriter.Write(header); err != nil {
 		return "", err
 	}
 
 	// Data
 	for _, c := range changes {
 		record := []string{c.FilePath, c.Sheet, c.Cell, c.OldValue, c.NewValue}
-		if err := writer.Write(record); err != nil {
+		if err := csvWriter.Write(record); err != nil {
 			return "", err
 		}
 	}
