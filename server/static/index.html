@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel テキスト置換ツール</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Excel テキスト置換ツール</h1>
+            <p>Excelファイル内のテキストを検索・置換します</p>
+            <button onclick="shutdownServer()" class="secondary-btn"
+                style="width: auto; margin-top: 10px; background-color: #dc3545;">サーバー停止</button>
+        </header>
+
+        <main>
+            <div class="card">
+                <div class="form-group">
+                    <label>モード選択</label>
+                    <div class="radio-group">
+                        <label>
+                            <input type="radio" name="mode" value="search" checked onchange="toggleMode()">
+                            検索のみ (変更なし)
+                        </label>
+                        <label>
+                            <input type="radio" name="mode" value="replace" onchange="toggleMode()">
+                            置換実行
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="dir">対象ディレクトリ</label>
+                    <div class="input-group">
+                        <input type="text" id="dir" placeholder="C:\path\to\files" value=".">
+                        <button type="button" onclick="browseDir()" class="secondary-btn">参照...</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="search">検索文字列</label>
+                    <input type="text" id="search" placeholder="検索するテキストを入力">
+                </div>
+
+                <div class="form-group" id="replace-group" style="display: none;">
+                    <label for="replace">置換後の文字列</label>
+                    <input type="text" id="replace" placeholder="置換後のテキストを入力">
+                </div>
+
+                <button id="start-btn" onclick="startProcess()">処理開始</button>
+            </div>
+
+            <div id="status-card" class="card" style="display: none;">
+                <h3>ステータス</h3>
+                <div class="progress-container">
+                    <div class="progress-bar" id="progress-bar"></div>
+                </div>
+                <p id="status-text">待機中...</p>
+                <p id="current-file" class="small-text"></p>
+
+                <div class="stats">
+                    <div class="stat-item">
+                        <span class="stat-label">処理ファイル数</span>
+                        <span class="stat-value" id="stat-files">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label" id="stat-replacements-label">ヒット数</span>
+                        <span class="stat-value" id="stat-replacements">0</span>
+                    </div>
+                </div>
+
+                <div id="download-area" style="display: none; margin-top: 20px;">
+                    <button onclick="downloadReport()" class="success-btn">レポートをダウンロード</button>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="app.js"></script>
+</body>
+
+</html>
