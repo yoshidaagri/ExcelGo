@@ -45,13 +45,20 @@ var (
 	statusMutex   sync.Mutex
 )
 
+func noCacheWrapper(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate")
+		next.ServeHTTP(w, r)
+	})
+}
+
 func StartServer(port string) {
 	// Serve static files
 	staticFS, err := fs.Sub(staticFiles, "static")
 	if err != nil {
 		log.Fatal(err)
 	}
-	http.Handle("/", http.FileServer(http.FS(staticFS)))
+	http.Handle("/", noCacheWrapper(http.FileServer(http.FS(staticFS))))
 
 	// API Endpoints
 	http.HandleFunc("/api/run", handleRun)
@@ -78,7 +85,7 @@ func handleBrowse(w http.ResponseWriter, r *http.Request) {
 		$f.Description = "Select Target Directory"
 		$f.ShowNewFolderButton = $true
 		if ($f.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
-			$f.SelectedPath | Out-File -FilePath "%s" -Encoding UTF8
+			[System.IO.File]::WriteAllText("%s", $f.SelectedPath, [System.Text.Encoding]::UTF8)
 		}
 	`, tmpFile)
 
@@ -105,6 +112,8 @@ func handleBrowse(w http.ResponseWriter, r *http.Request) {
 	path := string(content)
 	path = strings.TrimPrefix(path, "\uFEFF")
 	path = strings.TrimSpace(path)
+
+	fmt.Printf("Browse selected: %s\n", path) // Debug log
 
 	json.NewEncoder(w).Encode(map[string]string{"path": path})
 }

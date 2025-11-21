@@ -17,8 +17,14 @@ async function browseDir() {
             throw new Error('フォルダ選択に失敗しました');
         }
         const data = await response.json();
+        console.log("Browse response:", data);
         if (data.path) {
-            document.getElementById('dir').value = data.path;
+            const dirInput = document.getElementById('dir');
+            dirInput.value = data.path;
+            dirInput.setAttribute('value', data.path); // Force update attribute
+            alert("フォルダを選択しました:\n" + data.path);
+        } else {
+            console.warn("No path returned from server");
         }
     } catch (error) {
         alert('エラー: ' + error.message);
