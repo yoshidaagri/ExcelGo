@@ -93,6 +93,15 @@ async function pollStatus() {
             document.getElementById('stat-replacements-label').textContent = label;
             document.getElementById('stat-replacements').textContent = status.totalReplacements;
 
+            // Update Worker Stats
+            if (status.workerCounts) {
+                const statsDiv = document.getElementById('worker-stats');
+                const stats = Object.entries(status.workerCounts)
+                    .map(([name, count]) => `${name}: ${count}件`)
+                    .join(' | ');
+                statsDiv.innerText = stats;
+            }
+
             if (!status.running) {
                 clearInterval(interval);
                 document.getElementById('start-btn').disabled = false;

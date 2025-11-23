@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"excel_converter/excel"
 	"excel_converter/report"
@@ -34,27 +35,74 @@ func CollectTargetFiles(rootDir string) ([]string, error) {
 	return files, err
 }
 
-// ProcessFiles processes the given list of Excel files.
+type processResult struct {
+	path     string
+	changes  []report.Change
+	err      error
+	workerID int
+}
+
+// ProcessFiles processes the given list of Excel files using a worker pool.
 // It accepts a callback function to report progress.
-func ProcessFiles(files []string, search, replace string, searchOnly bool, onProgress func(current, total int, path string)) (int, []report.Change, error) {
+func ProcessFiles(files []string, search, replace string, searchOnly bool, onProgress func(current, total int, path string, workerCounts map[int]int)) (int, []report.Change, error) {
+	totalFiles := len(files)
+	if totalFiles == 0 {
+		return 0, nil, nil
+	}
+
+	// Worker Pool Configuration
+	numWorkers := 2
+	jobs := make(chan string, totalFiles)
+	results := make(chan processResult, totalFiles)
+
+	// Start Workers
+	var wg sync.WaitGroup
+	for i := 0; i < numWorkers; i++ {
+		wg.Add(1)
+		workerID := i // Capture for closure
+		go func() {
+			defer wg.Done()
+			for path := range jobs {
+				changes, err := excel.ProcessFile(path, search, replace, searchOnly)
+				results <- processResult{path: path, changes: changes, err: err, workerID: workerID}
+			}
+		}()
+	}
+
+	// Send Jobs
+	for _, path := range files {
+		jobs <- path
+	}
+	close(jobs)
+
+	// Wait for workers in a separate goroutine to close results channel
+	go func() {
+		wg.Wait()
+		close(results)
+	}()
+
+	// Collect Results
 	var allChanges []report.Change
 	totalReplacements := 0
-	totalFiles := len(files)
+	processedCount := 0
+	workerCounts := make(map[int]int)
 
-	for i, path := range files {
+	for res := range results {
+		processedCount++
+		workerCounts[res.workerID]++
+
 		if onProgress != nil {
-			onProgress(i+1, totalFiles, path)
+			onProgress(processedCount, totalFiles, res.path, workerCounts)
 		}
 
-		changes, err := excel.ProcessFile(path, search, replace, searchOnly)
-		if err != nil {
-			fmt.Printf("\nError processing %s: %v\n", path, err)
+		if res.err != nil {
+			fmt.Printf("\nError processing %s: %v\n", res.path, res.err)
 			continue
 		}
 
-		if len(changes) > 0 {
-			allChanges = append(allChanges, changes...)
-			totalReplacements += len(changes)
+		if len(res.changes) > 0 {
+			allChanges = append(allChanges, res.changes...)
+			totalReplacements += len(res.changes)
 		}
 	}
 

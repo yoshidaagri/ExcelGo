@@ -30,14 +30,15 @@ type Request struct {
 }
 
 type StatusResponse struct {
-	Running           bool   `json:"running"`
-	CurrentFile       string `json:"currentFile"`
-	Progress          int    `json:"progress"` // 0-100
-	TotalFiles        int    `json:"totalFiles"`
-	ProcessedFiles    int    `json:"processedFiles"`
-	TotalReplacements int    `json:"totalReplacements"`
-	Message           string `json:"message"`
-	ReportPath        string `json:"reportPath"`
+	Running           bool           `json:"running"`
+	CurrentFile       string         `json:"currentFile"`
+	Progress          int            `json:"progress"` // 0-100
+	TotalFiles        int            `json:"totalFiles"`
+	ProcessedFiles    int            `json:"processedFiles"`
+	TotalReplacements int            `json:"totalReplacements"`
+	Message           string         `json:"message"`
+	ReportPath        string         `json:"reportPath"`
+	WorkerCounts      map[string]int `json:"workerCounts"`
 }
 
 var (
@@ -149,8 +150,9 @@ func handleRun(w http.ResponseWriter, r *http.Request) {
 	}
 	// Reset status
 	currentStatus = StatusResponse{
-		Running: true,
-		Message: "Scanning files...",
+		Running:      true,
+		Message:      "Scanning files...",
+		WorkerCounts: make(map[string]int),
 	}
 	statusMutex.Unlock()
 
@@ -193,11 +195,18 @@ func runProcessing(req Request) {
 	utils.ForceCloseExcel()
 
 	// 3. Process
-	replacements, changes, err := processor.ProcessFiles(files, req.Search, req.Replace, req.SearchOnly, func(current, total int, path string) {
+	replacements, changes, err := processor.ProcessFiles(files, req.Search, req.Replace, req.SearchOnly, func(current, total int, path string, workerCounts map[int]int) {
 		updateStatus(func(s *StatusResponse) {
 			s.ProcessedFiles = current
 			s.CurrentFile = filepath.Base(path)
 			s.Progress = int(float64(current) / float64(total) * 100)
+
+			// Update worker stats
+			s.WorkerCounts = make(map[string]int)
+			for id, count := range workerCounts {
+				name := fmt.Sprintf("Worker %c", 'A'+id)
+				s.WorkerCounts[name] = count
+			}
 		})
 	})
 

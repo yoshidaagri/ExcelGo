@@ -113,7 +113,7 @@ func main() {
 	// Simple Progress Bar
 	// [====================] 100% (50/50)
 
-	totalReplacements, changes, err := processor.ProcessFiles(files, search, replace, searchOnly, func(current, total int, path string) {
+	totalReplacements, changes, err := processor.ProcessFiles(files, search, replace, searchOnly, func(current, total int, path string, workerCounts map[int]int) {
 		percent := float64(current) / float64(total) * 100
 		barLength := 50
 		filledLength := int(float64(barLength) * percent / 100)
