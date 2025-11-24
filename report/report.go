@@ -17,6 +17,8 @@ type Change struct {
 	Cell     string
 	OldValue string
 	NewValue string
+	Status   string // "Replaced", "Found", "Failed", "Skipped"
+	Message  string // Error message or reason for skip
 }
 
 // GenerateCSV creates a CSV report of all changes.
@@ -40,14 +42,14 @@ func GenerateCSV(changes []Change, outputDir string) (string, error) {
 	defer csvWriter.Flush()
 
 	// Header
-	header := []string{"File Path", "Sheet", "Cell", "Old Value", "New Value"}
+	header := []string{"File Path", "Sheet", "Cell", "Old Value", "New Value", "Status", "Message"}
 	if err := csvWriter.Write(header); err != nil {
 		return "", err
 	}
 
 	// Data
 	for _, c := range changes {
-		record := []string{c.FilePath, c.Sheet, c.Cell, c.OldValue, c.NewValue}
+		record := []string{c.FilePath, c.Sheet, c.Cell, c.OldValue, c.NewValue, c.Status, c.Message}
 		if err := csvWriter.Write(record); err != nil {
 			return "", err
 		}

@@ -15,7 +15,11 @@ import (
 	"excel_converter/utils"
 )
 
+const Version = "4.6"
+
 func main() {
+	fmt.Printf("Excel Converter v%s\n", Version)
+
 	// 1. Parse Flags
 	searchFlag := flag.String("search", "", "Text to search for")
 	replaceFlag := flag.String("replace", "", "Text to replace with")
@@ -90,7 +94,7 @@ func main() {
 
 	// 4. Collect Files
 	fmt.Println("Scanning for Excel files...")
-	files, err := processor.CollectTargetFiles(rootDir)
+	files, err := processor.CollectTargetFiles(rootDir, nil, "")
 	if err != nil {
 		fmt.Printf("Error scanning files: %v\n", err)
 		os.Exit(1)

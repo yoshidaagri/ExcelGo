@@ -20,7 +20,7 @@
         <main>
             <div class="card">
                 <div class="form-group">
-                    <label>モード選択</label>
+                    <label style="font-size: 1.1em; font-weight: bold;">モード選択</label>
                     <div class="radio-group">
                         <label>
                             <input type="radio" name="mode" value="search" checked onchange="toggleMode()">
@@ -34,20 +34,41 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="dir">対象ディレクトリ</label>
+                    <label for="dir" style="font-size: 1.1em; font-weight: bold;">対象ディレクトリ <span
+                            style="color: red;">*</span></label>
                     <div class="input-group">
                         <input type="text" id="dir" placeholder="C:\path\to\files" value=".">
-                        <button type="button" onclick="browseDir()" class="secondary-btn">参照...</button>
+                        <button type="button" onclick="browseDir('dir')" class="secondary-btn">参照...</button>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="search">検索文字列</label>
+                    <label style="font-size: 1.1em; font-weight: bold;">除外設定 (拡張子)</label>
+                    <div style="margin-bottom: 10px;">
+                        <label style="margin-right: 15px;"><input type="checkbox" id="exclude-xlsx" value=".xlsx"> .xlsx
+                            を除外</label>
+                        <label style="margin-right: 15px;"><input type="checkbox" id="exclude-xlsm" value=".xlsm"> .xlsm
+                            を除外</label>
+                        <span style="font-size: 0.8em; color: #666; margin-left: 10px;">※.csv, .xlsは対象外</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="exclude-dir" style="font-size: 1.1em; font-weight: bold;">除外設定 (フォルダ)</label>
+                    <div class="input-group">
+                        <input type="text" id="exclude-dir" placeholder="除外するディレクトリ (任意)">
+                        <button type="button" onclick="browseDir('exclude-dir')" class="secondary-btn">参照...</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="search" style="font-size: 1.1em; font-weight: bold;">検索文字列 <span
+                            style="color: red;">*</span></label>
                     <input type="text" id="search" placeholder="検索するテキストを入力">
                 </div>
 
                 <div class="form-group" id="replace-group" style="display: none;">
-                    <label for="replace">置換後の文字列</label>
+                    <label for="replace" style="font-size: 1.1em; font-weight: bold;">置換後の文字列</label>
                     <input type="text" id="replace" placeholder="置換後のテキストを入力">
                 </div>
 
@@ -63,7 +84,7 @@
                 <p id="current-file" class="small-text"></p>
 
                 <!-- Worker Stats Area -->
-                <div id="worker-stats" class="worker-stats" style="margin-top: 10px; font-weight: bold; color: #555;">
+                <div id="worker-stats" class="worker-stats" style="margin-top: 10px; font-weight: bold; color: red;">
                 </div>
 
                 <div class="stats">

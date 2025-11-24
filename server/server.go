@@ -23,10 +23,12 @@ import (
 var staticFiles embed.FS
 
 type Request struct {
-	Dir        string `json:"dir"`
-	Search     string `json:"search"`
-	Replace    string `json:"replace"`
-	SearchOnly bool   `json:"searchOnly"`
+	Dir               string   `json:"dir"`
+	Search            string   `json:"search"`
+	Replace           string   `json:"replace"`
+	SearchOnly        bool     `json:"searchOnly"`
+	ExcludeExtensions []string `json:"excludeExtensions"`
+	ExcludeDir        string   `json:"excludeDir"`
 }
 
 type StatusResponse struct {
@@ -170,7 +172,7 @@ func runProcessing(req Request) {
 	}()
 
 	// 1. Collect Files
-	files, err := processor.CollectTargetFiles(req.Dir)
+	files, err := processor.CollectTargetFiles(req.Dir, req.ExcludeExtensions, req.ExcludeDir)
 	if err != nil {
 		updateStatus(func(s *StatusResponse) {
 			s.Message = fmt.Sprintf("Error collecting files: %v", err)

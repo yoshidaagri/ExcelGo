@@ -12,17 +12,41 @@ import (
 )
 
 // CollectTargetFiles walks the directory and returns a list of Excel files to process.
-func CollectTargetFiles(rootDir string) ([]string, error) {
+func CollectTargetFiles(rootDir string, excludeExtensions []string, excludeDir string) ([]string, error) {
 	var files []string
+
+	// Normalize excludeDir for comparison
+	if excludeDir != "" {
+		excludeDir = filepath.Clean(excludeDir)
+	}
+
+	// Create a map for faster extension lookup
+	excludeExtMap := make(map[string]bool)
+	for _, ext := range excludeExtensions {
+		excludeExtMap[strings.ToLower(ext)] = true
+	}
+
 	err := filepath.Walk(rootDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
+
+		// Check excluded directory
 		if info.IsDir() {
+			if excludeDir != "" && strings.HasPrefix(filepath.Clean(path), excludeDir) {
+				return filepath.SkipDir
+			}
 			return nil
 		}
+
 		// Check extension
 		ext := strings.ToLower(filepath.Ext(path))
+
+		// Skip if extension is excluded
+		if excludeExtMap[ext] {
+			return nil
+		}
+
 		if ext == ".xlsx" || ext == ".xlsm" {
 			// Skip temporary files (start with ~$)
 			if strings.HasPrefix(filepath.Base(path), "~$") {
@@ -97,7 +121,7 @@ func ProcessFiles(files []string, search, replace string, searchOnly bool, onPro
 
 		if res.err != nil {
 			fmt.Printf("\nError processing %s: %v\n", res.path, res.err)
-			continue
+			// Don't continue; we might have partial results (e.g. failed save)
 		}
 
 		if len(res.changes) > 0 {

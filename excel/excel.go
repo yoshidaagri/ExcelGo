@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"excel_converter/report"
+	"excel_converter/utils"
 
 	"github.com/xuri/excelize/v2"
 )
@@ -12,7 +13,9 @@ import (
 // ProcessFile opens an Excel file, searches for text, replaces it, and styles the cell.
 // If searchOnly is true, it only records the found text without modifying the file.
 func ProcessFile(path, search, replace string, searchOnly bool) ([]report.Change, error) {
-	f, err := excelize.OpenFile(path)
+	// Use extended path for opening to support long paths
+	extendedPath := utils.ToExtendedPath(path)
+	f, err := excelize.OpenFile(extendedPath)
 	if err != nil {
 		return nil, err
 	}
@@ -55,11 +58,27 @@ func ProcessFile(path, search, replace string, searchOnly bool) ([]report.Change
 						newValue = strings.ReplaceAll(colCell, search, replace)
 
 						// Update cell value
-						f.SetCellValue(sheetName, cellName, newValue)
+						if err := f.SetCellValue(sheetName, cellName, newValue); err != nil {
+							changes = append(changes, report.Change{
+								FilePath: path,
+								Sheet:    sheetName,
+								Cell:     cellName,
+								OldValue: colCell,
+								NewValue: newValue,
+								Status:   "Failed",
+								Message:  fmt.Sprintf("SetCellValue failed: %v", err),
+							})
+							continue
+						}
 
 						// Apply style
 						f.SetCellStyle(sheetName, cellName, cellName, styleID)
 						modified = true
+					}
+
+					status := "Found"
+					if !searchOnly {
+						status = "Success"
 					}
 
 					// Record change
@@ -69,6 +88,7 @@ func ProcessFile(path, search, replace string, searchOnly bool) ([]report.Change
 						Cell:     cellName,
 						OldValue: colCell,
 						NewValue: newValue, // In searchOnly, this will be same as OldValue
+						Status:   status,
 					})
 				}
 			}
@@ -76,9 +96,23 @@ func ProcessFile(path, search, replace string, searchOnly bool) ([]report.Change
 	}
 
 	if modified && !searchOnly {
-		if err := f.Save(); err != nil {
-			return nil, fmt.Errorf("failed to save file: %w", err)
+		fmt.Printf("[DEBUG] File %s has %d changes. Attempting to save...\n", path, len(changes))
+		// Use SaveExcelSafe to handle long paths
+		if err := utils.SaveExcelSafe(f, path); err != nil {
+			fmt.Printf("[DEBUG] FAILED to save %s: %v\n", path, err)
+			// Mark all "Success" changes as "Failed"
+			for i := range changes {
+				if changes[i].Status == "Success" {
+					changes[i].Status = "Failed"
+					changes[i].Message = fmt.Sprintf("Save failed: %v", err)
+				}
+			}
+			// Return changes even if save failed, so they appear in the report
+			return changes, fmt.Errorf("failed to save file: %w", err)
 		}
+		fmt.Printf("[DEBUG] Successfully saved %s\n", path)
+	} else if len(changes) > 0 {
+		fmt.Printf("[DEBUG] File %s has %d hits (Search Mode).\n", path, len(changes))
 	}
 
 	return changes, nil

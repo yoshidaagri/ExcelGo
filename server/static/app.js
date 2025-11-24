@@ -10,7 +10,7 @@ function toggleMode() {
     }
 }
 
-async function browseDir() {
+async function browseDir(targetId = 'dir') {
     try {
         const response = await fetch('/api/browse');
         if (!response.ok) {
@@ -19,7 +19,7 @@ async function browseDir() {
         const data = await response.json();
         console.log("Browse response:", data);
         if (data.path) {
-            const dirInput = document.getElementById('dir');
+            const dirInput = document.getElementById(targetId);
             dirInput.value = data.path;
             dirInput.setAttribute('value', data.path); // Force update attribute
             alert("フォルダを選択しました:\n" + data.path);
@@ -37,6 +37,13 @@ async function startProcess() {
     const replace = document.getElementById('replace').value;
     const mode = document.querySelector('input[name="mode"]:checked').value;
 
+    // Exclusion settings
+    const excludeExtensions = [];
+    if (document.getElementById('exclude-xlsx').checked) excludeExtensions.push('.xlsx');
+    if (document.getElementById('exclude-xlsm').checked) excludeExtensions.push('.xlsm');
+
+    const excludeDir = document.getElementById('exclude-dir').value;
+
     if (!dir || !search) {
         alert('ディレクトリと検索文字列は必須です');
         return;
@@ -48,7 +55,9 @@ async function startProcess() {
         dir: dir,
         search: search,
         replace: replace,
-        searchOnly: searchOnly
+        searchOnly: searchOnly,
+        excludeExtensions: excludeExtensions,
+        excludeDir: excludeDir
     };
 
     try {

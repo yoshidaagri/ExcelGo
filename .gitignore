@@ -1,0 +1,12 @@
+# Binaries
+*.exe
+*.dll
+
+# Test results
+03.test/result/
+*.csv
+
+# Temp files
+*.tmp
+temp_short.xlsx
+~$*
