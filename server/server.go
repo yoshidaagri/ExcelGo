@@ -83,15 +83,37 @@ func handleBrowse(w http.ResponseWriter, r *http.Request) {
 	// We write to a temporary file to avoid stdout encoding issues entirely, then read it back.
 	tmpFile := filepath.Join(os.TempDir(), fmt.Sprintf("excel_converter_path_%d.txt", time.Now().UnixNano()))
 
+	// Get initial path from query param
+	initialPath := r.URL.Query().Get("path")
+	absPath := ""
+	if initialPath != "" {
+		if p, err := filepath.Abs(initialPath); err == nil {
+			// Verify it exists and is a directory
+			if info, err := os.Stat(p); err == nil && info.IsDir() {
+				absPath = p
+			}
+		}
+	}
+
+	// Prepare PowerShell script
+	// We inject the absolute path if available.
+	// Note: We use single quotes for the path in PowerShell to avoid some escaping issues,
+	// but we should still be careful. For simplicity, we'll assume standard Windows paths.
+	selectedPathLine := ""
+	if absPath != "" {
+		selectedPathLine = fmt.Sprintf(`$f.SelectedPath = '%s'`, absPath)
+	}
+
 	psScript := fmt.Sprintf(`
 		Add-Type -AssemblyName System.Windows.Forms
 		$f = New-Object System.Windows.Forms.FolderBrowserDialog
 		$f.Description = "Select Target Directory"
 		$f.ShowNewFolderButton = $true
+		%s
 		if ($f.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
 			[System.IO.File]::WriteAllText("%s", $f.SelectedPath, [System.Text.Encoding]::UTF8)
 		}
-	`, tmpFile)
+	`, selectedPathLine, tmpFile)
 
 	cmd := exec.Command("powershell", "-NoProfile", "-Command", psScript)
 	if err := cmd.Run(); err != nil {

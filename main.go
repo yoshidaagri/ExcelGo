@@ -15,7 +15,7 @@ import (
 	"excel_converter/utils"
 )
 
-const Version = "4.7"
+const Version = "4.8"
 
 func main() {
 	fmt.Printf("Excel Converter v%s\n", Version)

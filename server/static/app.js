@@ -12,7 +12,9 @@ function toggleMode() {
 
 async function browseDir(targetId = 'dir') {
     try {
-        const response = await fetch('/api/browse');
+        const currentPath = document.getElementById(targetId).value;
+        const encodedPath = encodeURIComponent(currentPath);
+        const response = await fetch(`/api/browse?path=${encodedPath}`);
         if (!response.ok) {
             throw new Error('フォルダ選択に失敗しました');
         }
