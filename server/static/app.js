@@ -29,6 +29,7 @@ async function browseDir(targetId = 'dir') {
             console.log("New value:", cleanPath);
 
             dirInput.value = cleanPath;
+            dirInput.scrollLeft = 0;
             dirInput.setAttribute('value', cleanPath);
 
             // Visual feedback
