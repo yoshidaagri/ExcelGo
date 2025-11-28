@@ -82,6 +82,8 @@ func handleBrowse(w http.ResponseWriter, r *http.Request) {
 	// We use a specific encoding strategy to ensure Japanese characters are preserved.
 	// We write to a temporary file to avoid stdout encoding issues entirely, then read it back.
 	tmpFile := filepath.Join(os.TempDir(), fmt.Sprintf("excel_converter_path_%d.txt", time.Now().UnixNano()))
+	// Fix: Replace backslashes with forward slashes to avoid PowerShell escape sequence issues (e.g., \t interpreted as tab)
+	tmpFileForPS := strings.ReplaceAll(tmpFile, `\`, `/`)
 
 	// Get initial path from query param
 	initialPath := r.URL.Query().Get("path")
@@ -113,7 +115,7 @@ func handleBrowse(w http.ResponseWriter, r *http.Request) {
 		if ($f.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
 			[System.IO.File]::WriteAllText("%s", $f.SelectedPath, [System.Text.Encoding]::UTF8)
 		}
-	`, selectedPathLine, tmpFile)
+	`, selectedPathLine, tmpFileForPS)
 
 	cmd := exec.Command("powershell", "-NoProfile", "-Command", psScript)
 	if err := cmd.Run(); err != nil {
