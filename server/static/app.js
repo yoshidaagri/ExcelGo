@@ -24,7 +24,7 @@ async function browseDir(targetId = 'dir') {
             const dirInput = document.getElementById(targetId);
             dirInput.value = data.path;
             dirInput.setAttribute('value', data.path); // Force update attribute
-            alert("フォルダを選択しました:\n" + data.path);
+            console.log("Folder selected:", data.path);
         } else {
             console.warn("No path returned from server");
         }
