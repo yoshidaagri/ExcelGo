@@ -36,6 +36,7 @@ async function startProcess() {
     const search = document.getElementById('search').value;
     const replace = document.getElementById('replace').value;
     const mode = document.querySelector('input[name="mode"]:checked').value;
+    const format = document.querySelector('input[name="format"]:checked').value;
 
     // Exclusion settings
     const excludeExtensions = [];
@@ -57,7 +58,10 @@ async function startProcess() {
         replace: replace,
         searchOnly: searchOnly,
         excludeExtensions: excludeExtensions,
-        excludeDir: excludeDir
+        searchOnly: searchOnly,
+        excludeExtensions: excludeExtensions,
+        excludeDir: excludeDir,
+        format: format
     };
 
     try {

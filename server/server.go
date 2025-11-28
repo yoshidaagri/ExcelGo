@@ -29,6 +29,7 @@ type Request struct {
 	SearchOnly        bool     `json:"searchOnly"`
 	ExcludeExtensions []string `json:"excludeExtensions"`
 	ExcludeDir        string   `json:"excludeDir"`
+	Format            string   `json:"format"` // "csv" or "tsv"
 }
 
 type StatusResponse struct {
@@ -222,7 +223,7 @@ func runProcessing(req Request) {
 	// 4. Generate Report
 	var reportPath string
 	if len(changes) > 0 {
-		reportPath, err = report.GenerateCSV(changes, req.Dir)
+		reportPath, err = report.GenerateReport(changes, req.Dir, req.Format)
 		if err != nil {
 			updateStatus(func(s *StatusResponse) {
 				s.Message = fmt.Sprintf("Error generating report: %v", err)
@@ -258,9 +259,11 @@ func handleDownload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Ensure filename has .csv extension for the browser
+	// Ensure filename has .csv or .tsv extension for the browser
 	filename := filepath.Base(path)
-	if !strings.HasSuffix(strings.ToLower(filename), ".csv") {
+	lowerFilename := strings.ToLower(filename)
+	if !strings.HasSuffix(lowerFilename, ".csv") && !strings.HasSuffix(lowerFilename, ".tsv") {
+		// Default to csv if unknown, though this shouldn't happen with generated reports
 		filename += ".csv"
 	}
 

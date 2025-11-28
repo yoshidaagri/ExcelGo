@@ -15,7 +15,7 @@ import (
 	"excel_converter/utils"
 )
 
-const Version = "4.6"
+const Version = "4.7"
 
 func main() {
 	fmt.Printf("Excel Converter v%s\n", Version)
@@ -26,6 +26,7 @@ func main() {
 	dirFlag := flag.String("dir", ".", "Directory to search in")
 	serverFlag := flag.Bool("server", false, "Run in Web Server mode")
 	portFlag := flag.String("port", "8080", "Port for Web Server")
+	formatFlag := flag.String("format", "csv", "Output format (csv or tsv)")
 	flag.Parse()
 
 	// Check if we should run in server mode
@@ -139,7 +140,7 @@ func main() {
 
 	// 6. Generate Report
 	if len(changes) > 0 {
-		reportPath, err := report.GenerateCSV(changes, rootDir)
+		reportPath, err := report.GenerateReport(changes, rootDir, *formatFlag)
 		if err != nil {
 			fmt.Printf("Error generating report: %v\n", err)
 		} else {

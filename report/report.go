@@ -21,10 +21,18 @@ type Change struct {
 	Message  string // Error message or reason for skip
 }
 
-// GenerateCSV creates a CSV report of all changes.
-func GenerateCSV(changes []Change, outputDir string) (string, error) {
+// GenerateReport creates a CSV or TSV report of all changes.
+func GenerateReport(changes []Change, outputDir string, format string) (string, error) {
 	timestamp := time.Now().Format("20060102_150405")
-	filename := fmt.Sprintf("replacement_report_%s.csv", timestamp)
+
+	ext := ".csv"
+	separator := ','
+	if format == "tsv" {
+		ext = ".tsv"
+		separator = '\t'
+	}
+
+	filename := fmt.Sprintf("replacement_report_%s%s", timestamp, ext)
 	fullPath := filename
 	if outputDir != "" {
 		fullPath = outputDir + "\\" + filename
@@ -39,6 +47,7 @@ func GenerateCSV(changes []Change, outputDir string) (string, error) {
 	// Wrap file with Shift-JIS encoder
 	writer := transform.NewWriter(file, japanese.ShiftJIS.NewEncoder())
 	csvWriter := csv.NewWriter(writer)
+	csvWriter.Comma = separator // Set separator based on format
 	defer csvWriter.Flush()
 
 	// Header
