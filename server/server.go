@@ -134,7 +134,6 @@ func handleBrowse(w http.ResponseWriter, r *http.Request) {
 	}
 	defer os.Remove(tmpFile)
 
-	// Remove BOM if present and trim whitespace
 	path := string(content)
 	path = strings.TrimPrefix(path, "\uFEFF")
 	path = strings.TrimSpace(path)

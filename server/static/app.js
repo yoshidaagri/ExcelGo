@@ -22,9 +22,23 @@ async function browseDir(targetId = 'dir') {
         console.log("Browse response:", data);
         if (data.path) {
             const dirInput = document.getElementById(targetId);
-            dirInput.value = data.path;
-            dirInput.setAttribute('value', data.path); // Force update attribute
-            console.log("Folder selected:", data.path);
+            const cleanPath = data.path.trim();
+
+            console.log("Updating input:", dirInput);
+            console.log("Old value:", dirInput.value);
+            console.log("New value:", cleanPath);
+
+            dirInput.value = cleanPath;
+            dirInput.setAttribute('value', cleanPath);
+
+            // Visual feedback
+            const originalBg = dirInput.style.backgroundColor;
+            dirInput.style.backgroundColor = "#e8f5e9"; // Light green
+            setTimeout(() => {
+                dirInput.style.backgroundColor = originalBg;
+            }, 500);
+
+            console.log("Folder selected and updated:", cleanPath);
         } else {
             console.warn("No path returned from server");
         }
@@ -58,8 +72,6 @@ async function startProcess() {
         dir: dir,
         search: search,
         replace: replace,
-        searchOnly: searchOnly,
-        excludeExtensions: excludeExtensions,
         searchOnly: searchOnly,
         excludeExtensions: excludeExtensions,
         excludeDir: excludeDir,
