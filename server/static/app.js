@@ -32,6 +32,13 @@ async function browseDir(targetId = 'dir') {
             dirInput.scrollLeft = 0;
             dirInput.setAttribute('value', cleanPath);
 
+            // Update display label if it exists
+            const displayId = targetId + '-display';
+            const displayEl = document.getElementById(displayId);
+            if (displayEl) {
+                displayEl.textContent = cleanPath;
+            }
+
             // Visual feedback
             const originalBg = dirInput.style.backgroundColor;
             dirInput.style.backgroundColor = "#e8f5e9"; // Light green
